@@ -1,5 +1,5 @@
 <template>
-  <v-app>
+  <v-app light v-if="authenticated">
     <v-toolbar app>
       <v-toolbar-title class="headline text-uppercase">
         <span>Vuetify</span>
@@ -14,20 +14,60 @@
         <span class="mr-2">Latest Release</span>
       </v-btn>
     </v-toolbar>
-
     <v-content>
-      <HelloWorld/>
+      <v-container fluid>
+        <router-view></router-view>
+      </v-container>
     </v-content>
+    <Notification
+      :value="notification"
+      color="primary"
+      @close="() => clearNotification()"
+    ></Notification>
+  </v-app>
+  <v-app  v-else>
+    <v-container class="ita-authentication-layout">
+      <SignIn />
+      <Notification
+        :value="notification"
+        color="primary"
+        @close="() => clearNotification()"
+      ></Notification>
+    </v-container>
   </v-app>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld'
+import { mapState, mapGetters, mapActions } from 'vuex'
+import Notification from './components/Notification'
+import SignIn from '@/components/SignIn'
 
 export default {
   name: 'App',
+  computed: {
+    ...mapState({
+      notification: state => state.notification,
+      username: state => state.credentials.username
+    }),
+    ...mapGetters({
+      authenticated: 'credentials/isAuthenticated'
+    })
+  },
   components: {
-    HelloWorld
+    Notification,
+    SignIn
+  },
+  methods: {
+    ...mapActions({
+      clearNotification: 'clearNotification'
+    })
+  },
+  watch: {
+    authenticated (newVal) {
+      if (newVal) {
+        this.$notify(this.$t('welcome', [this.username]))
+      }
+    }
   },
   data () {
     return {
